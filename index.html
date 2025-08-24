@@ -1,3 +1,326 @@
-<h1>
-  Hello
-</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arun Sagar Pothulapally - Personal Portfolio</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+    <div class="portfolio-container">
+
+        <aside class="sidebar">
+            <div class="profile">
+                <img src="assets/me.jfif" alt="Arun Sagar Pothulapally" class="profile-img">
+                <h1 class="profile-name">Arun Sagar Pothulapally</h1>
+                <p class="profile-title">Cloud Backend developer</p>
+            </div>
+
+            <div class="contact-info">
+                <div class="contact-item">
+                    <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+                    <div class="contact-details">
+                        <h4>EMAIL</h4>
+                        <p>parun.sagar@gmail.com</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon"><i class="fas fa-phone"></i></div>
+                    <div class="contact-details">
+                        <h4>PHONE</h4>
+                        <p>+1 (513)-372-1458</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div>
+                    <div class="contact-details">
+                        <h4>LOCATION</h4>
+                        <p>Irving, TX, USA</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="social-links">
+                <a href="https://www.linkedin.com/in/arunsagarp/" target="_blank" class="social-icon"><i class="fab fa-linkedin"></i></a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <h2>About Me</h2>
+                <nav>
+                    <a href="#about" class="active">About</a>
+                    <a href="#resume">Resume</a>
+                    <a href="#projects">Projects</a>
+                </nav>
+            </header>
+
+            <section id="about">
+                <p class="about-text">
+                    I'm a Cloud Backend Developer specializing in GCP, AWS, and containerized services. I design, develop, and optimize scalable backend systems, working across microservices, Kubernetes, and cloud infrastructure.
+                </p>
+                
+                <h3 class="section-title">Skills</h3>
+                <div class="skills-container">
+                    <div class="skill-category">
+                        <h4>Languages & Databases</h4>
+                        <div class="skill-tags">
+                            <span class="skill-tag">Python</span>
+                            <span class="skill-tag">Go Lang</span>
+                            <span class="skill-tag">Java</span>
+                            <span class="skill-tag">MySQL</span>
+                            <span class="skill-tag">PostgreSQL</span>
+                        </div>
+                    </div>
+                    <div class="skill-category">
+                        <h4>Cloud Services</h4>
+                        <div class="skill-tags">
+                            <span class="skill-tag">AWS</span>
+                            <span class="skill-tag">GCP</span>
+                            <span class="skill-tag">VPC</span>
+                            <span class="skill-tag">EC2</span>
+                            <span class="skill-tag">Lambda</span>
+                            <span class="skill-tag">S3</span>
+                            <span class="skill-tag">GKE</span>
+                        </div>
+                    </div>
+                    <div class="skill-category">
+                        <h4>DevOps & Tools</h4>
+                        <div class="skill-tags">
+                            <span class="skill-tag">Kubernetes</span>
+                            <span class="skill-tag">Docker</span>
+                            <span class="skill-tag">Helm</span>
+                            <span class="skill-tag">Jenkins</span>
+                            <span class="skill-tag">Linux</span>
+                            <span class="skill-tag">CI/CD</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 class="section-title">What I'm Doing</h3>
+                <div class="grid-layout">
+                    <div class="service-card">
+                        <div class="service-icon"><i class="fas fa-cloud"></i></div>
+                        <h4>Cloud Backend Development</h4>
+                        <p>Designing and building scalable cloud-native backend services on GCP and AWS.</p>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon"><i class="fas fa-database"></i></div>
+                        <h4>Database & APIs</h4>
+                        <p>Developing APIs and optimizing data pipelines with PostgreSQL, MySQL, and distributed systems.</p>
+                    </div>
+                    <div class="service-card">
+                        <div class="service-icon"><i class="fas fa-cogs"></i></div>
+                        <h4>Automation & CI/CD</h4>
+                        <p>Automating deployments using Kubernetes, Helm, Jenkins, and Docker.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="projects">
+                <h3 class="section-title">Projects</h3>
+                
+                <div class="project-item">
+                    <div class="project-content">
+                        <h4 class="project-title">Cross-hatching Algorithm</h4>
+                        <p class="project-description">
+                            Created a Processing-based algorithm that transforms photographs into artistic renderings using cross-hatching techniques. The system analyzes image brightness and applies variable-density line patterns across multiple configurable layers, mimicking traditional drawing methods with adjustable parameters.
+                        </p>
+                        <div class="project-tech">
+                            <span class="project-tech-tag">Processing</span>
+                            <span class="project-tech-tag">Java</span>
+                            <span class="project-tech-tag">Image Processing</span>
+                        </div>
+                        <!-- <div class="project-links">
+                            <a href="#" class="btn"><i class="fas fa-code"></i> View Code</a>
+                        </div> -->
+                    </div>
+                    <div class="project-image">
+                        <div class="slideshow" data-project="crosshatching">
+                            <div class="slideshow-slide active" style="background-image: url('assets/images/ch2.jpg');" data-img="assets/images/ch2.jpg"><span class="zoom-icon"><i class="fas fa-search-plus"></i></span></div>
+                            <div class="slideshow-slide" style="background-image: url('assets/images/ch3.jpg');" data-img="assets/images/ch3.jpg"><span class="zoom-icon"><i class="fas fa-search-plus"></i></span></div>
+                            <div class="slideshow-slide" style="background-image: url('assets/images/ch1.jpg');" data-img="assets/images/ch1.jpg"><span class="zoom-icon"><i class="fas fa-search-plus"></i></span></div>
+                            <div class="slideshow-controls">
+                                <span class="slideshow-dot active" data-slide="0"></span>
+                                <span class="slideshow-dot" data-slide="1"></span>
+                                <span class="slideshow-dot" data-slide="2"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="project-item">
+                    <div class="project-content">
+                        <h4 class="project-title">Fourier Transform Visualization</h4>
+                        <p class="project-description">
+                            This project visualizes the Discrete Fourier Transform by showing how complex shapes can be drawn using rotating circles (epicycles). It converts drawn paths into frequency components, then reconstructs the original drawing through animated vector addition. The visualization demonstrates how any shape can be broken down into simpler circular motions, making abstract Fourier analysis concepts visually accessible.
+                        </p>
+                        <div class="project-tech">
+                            <span class="project-tech-tag">P5.js</span>
+                            <span class="project-tech-tag">Complex numbers</span>
+                            <span class="project-tech-tag">Visualization</span>
+                        </div>
+                        <!-- <div class="project-links">
+                            <a href="#" class="btn"><i class="fas fa-code"></i> View Code</a>
+                        </div> -->
+                    </div>
+                    <div class="project-image">
+                        <div class="slideshow" data-project="neural">
+                            <div class="slideshow-slide active" style="background-image: url('assets/images/f.gif');" data-img="assets/images/f.gif"><span class="zoom-icon"><i class="fas fa-search-plus"></i></span></div>
+                            <div class="slideshow-slide" style="background-image: url('neural-networks-and-deep-learning-master/fig/mnist_first_digit.png');" data-img="neural-networks-and-deep-learning-master/fig/mnist_first_digit.png"><span class="zoom-icon"><i class="fas fa-search-plus"></i></span></div>
+                            <div class="slideshow-slide" style="background-image: url('neural-networks-and-deep-learning-master/fig/digits.png');" data-img="neural-networks-and-deep-learning-master/fig/digits.png"><span class="zoom-icon"><i class="fas fa-search-plus"></i></span></div>
+                            <div class="slideshow-controls">
+                                <span class="slideshow-dot active" data-slide="0"></span>
+                                <span class="slideshow-dot" data-slide="1"></span>
+                                <span class="slideshow-dot" data-slide="2"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="project-item">
+                    <div class="project-content">
+                        <h4 class="project-title">Weaving Algorithm</h4>
+                        <p class="project-description">
+                            Created a generative art algorithm that simulates weaving patterns based on image input, producing circular weaving designs. This project translates pixel values from images into thread patterns, creating an interesting intersection between digital and traditional crafts.
+                        </p>
+                        <div class="project-tech">
+                            <span class="project-tech-tag">Processing</span>
+                            <span class="project-tech-tag">Generative Art</span>
+                            <span class="project-tech-tag">Algorithmic Design</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="https://youtu.be/7sRGV1FVXGE" target="_blank" class="btn"><i class="fas fa-video"></i> Watch Video</a>
+                        </div>
+                    </div>
+                    <div class="project-image">
+                        <div class="slideshow" data-project="weaving">
+                            <div class="slideshow-slide active" style="background-image: url('assets/images/wa1.png');" data-img="assets/images/wa1.png"><span class="zoom-icon"><i class="fas fa-search-plus"></i></span></div>
+                            <div class="slideshow-slide" style="background-image: url('assets/images/wa2.jpg');" data-img="assets/images/wa2.jpg"><span class="zoom-icon"><i class="fas fa-search-plus"></i></span></div>
+                            <div class="slideshow-controls">
+                                <span class="slideshow-dot active" data-slide="0"></span>
+                                <span class="slideshow-dot" data-slide="1"></span>
+                                <span class="slideshow-dot" data-slide="2"></span>
+                            </div>
+                        </div>
+<!-- Modal for slideshow image popup -->
+<div class="slideshow-modal" id="slideshowModal">
+    <button class="slideshow-modal-close" id="slideshowModalClose" aria-label="Close">&times;</button>
+    <img class="slideshow-modal-img" id="slideshowModalImg" src="" alt="Slideshow Image" />
+</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="resume">
+                <h3 class="section-title">Resume</h3>
+                <div class="resume-container">
+                    <div class="resume-section">
+                        <h4 class="resume-section-title">EDUCATION</h4>
+                        <div class="resume-entry">
+                            <div class="resume-entry-header">
+                                <h5 class="resume-entry-title">Master of Science in Information Technology, GPA: 3.9</h5>
+                                <div class="resume-entry-company">University of Cincinnati</div>
+                                <div class="resume-entry-period">Aug 2022 - Dec 2023</div>
+                            </div>
+                        </div>
+                        <div class="resume-entry">
+                            <div class="resume-entry-header">
+                                <h5 class="resume-entry-title">Bachelor of Technology in Computer Science Engineering</h5>
+                                <div class="resume-entry-company">Keshav Memorial Institute of Technology</div>
+                                <div class="resume-entry-period">Aug 2015 - Apr 2019</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="resume-section">
+                        <h4 class="resume-section-title">WORK EXPERIENCE</h4>
+                        <div class="resume-entry">
+                            <div class="resume-entry-header">
+                                <h5 class="resume-entry-title">Senior Software Developer (Sofy Services Team)</h5>
+                                <div class="resume-entry-company">HCL Software, USA</div>
+                                <div class="resume-entry-period">Feb 2024 - Present</div>
+                            </div>
+                            <div class="resume-entry-description">
+                                <ul>
+                                    <li>Updated provider-gcp repo to support label updates for GKE cluster as part of generating cost-reports.</li>
+                                    <li>Developed a sidecar service to track HTTPS traffic in GKE and expose an endpoint for last-accessed timestamp. Implemented background jobs in Go Lang to auto-suspend inactive clusters, optimizing resource utilization.</li>
+                                    <li>Led GKE cluster right-sizing by analyzing memory and CPU requests/limits, significantly reducing cloud costs.</li>
+                                    <li>Designed and Implemented APIs that converts ephemeral IP to static, create and schedule volume snapshots for volume claims, update cluster k8s version, identify the node termination for GKE etc.</li>
+                                    <li>Worked on Vertical Pod Autoscaler to capture product metrics and store them in DB. Exposed an API to read these metrics and analyze the optimal CPU and memory requirements for each workload.</li>
+                                    <li>Conducted a PoC for deploying GKE clusters across multiple GCP projects, overcoming regional and zonal limitations.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="resume-entry">
+                            <div class="resume-entry-header">
+                                <h5 class="resume-entry-title">Intern (SoFy Services Team)</h5>
+                                <div class="resume-entry-company">HCL Software, USA</div>
+                                <div class="resume-entry-period">Jul 2023 – Feb 2024</div>
+                            </div>
+                            <div class="resume-entry-description">
+                                <ul>
+                                    <li>Contributed to the development of SoFy backend microservices responsible for deploying HCL products on GKE.</li>
+                                    <li>Worked on enabling support for creating GKE clusters in multiple geos from sofy backend services to overcome the zonal limits in GCP.</li>
+                                    <li>Enhanced application security in accordance with industry best practices by updating libraries and addressing CVE vulnerabilities.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="resume-entry">
+                            <div class="resume-entry-header">
+                                <h5 class="resume-entry-title">Senior Software Developer (Voltmx Cloud Team)</h5>
+                                <div class="resume-entry-company">HCL Technologies, India</div>
+                                <div class="resume-entry-period">Aug 2021 - Aug 2022</div>
+                            </div>
+                            <div class="resume-entry-description">
+                                <ul>
+                                    <li>Led the migration from nosetests to pytest due to nosetests discontinuation.</li>
+                                    <li>Devised a strategy employing SQLite DB during unit tests to prevent insertion of dummy data into the actual DB.</li>
+                                    <li>Optimized metrics processing time and addressed IPv6 location fetching limitations in MySQL by leveraging Maxmind mmdb over MySQL GSI.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="resume-entry">
+                            <div class="resume-entry-header">
+                                <h5 class="resume-entry-title">Software Developer (Cloud Foundation Team – Provision)</h5>
+                                <div class="resume-entry-company">Kony, Inc., India</div>
+                                <div class="resume-entry-period">Oct 2019 - Aug 2021</div>
+                            </div>
+                            <div class="resume-entry-description">
+                                <ul>
+                                    <li>Extensively worked on upgrading Provision code base to Python3, Boto3.</li>
+                                    <li>Implemented an automated system for provisioning subaccounts within the AWS Organization account and created assume role in subaccount to eliminate the need for key-based authentication.</li>
+                                    <li>Established Jenkins on EC2 for executing Build verification tests and configured multiple jobs.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="resume-section">
+                        <h4 class="resume-section-title">CERTIFICATIONS & AWARDS</h4>
+                        <div class="certifications">
+                            <div class="certification">Oracle certified java8 associate</div>
+                            <div class="certification">Extra Mile Award, Kony, Dec 2019</div>
+                            <div class="certification">Team Award, Kony, June 2020</div>
+                            <div class="certification">Spot Award, Kony, Jan 2020</div>
+                            <div class="certification">Standout performer and product champion award, HCL Software, Aug 2024</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script src="assets/js/main.js"></script>
+</body>
+</html>
