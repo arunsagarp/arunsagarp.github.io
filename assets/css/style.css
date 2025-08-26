@@ -347,3 +347,41 @@ section { margin-bottom: 3rem; }
     .grid-layout { grid-template-columns: 1fr; }
     .project-content { padding: 1.5rem; }
 }
+
+.focus-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+}
+
+.focus-item {
+    background-color: var(--card-color);
+    padding: 2rem 1.5rem;
+    border-radius: 12px;
+    border-top: 3px solid var(--accent-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-align: center;
+}
+
+.focus-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.focus-icon {
+    font-size: 2.2rem;
+    color: var(--accent-color);
+    display: inline-block;
+    margin-bottom: 1rem;
+}
+
+.focus-item h4 {
+    font-size: 1.2rem;
+    margin-bottom: 0.8rem;
+}
+
+.focus-item p {
+    font-size: 0.9rem;
+    color: var(--secondary-text-color);
+    line-height: 1.6;
+}
