@@ -355,7 +355,7 @@
     container.setPointerCapture(e.pointerId);
     activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
-    if (activePointers.size === 1 && !gyroEnabled) {
+    if (activePointers.size === 1) {
       dragging = true;
       lastX = e.clientX;
       lastY = e.clientY;
@@ -382,7 +382,7 @@
       return;
     }
 
-    if (!dragging || gyroEnabled) return;
+    if (!dragging) return;
     const dx = e.clientX - lastX;
     const dy = e.clientY - lastY;
     lastX = e.clientX;
@@ -398,7 +398,7 @@
     if (activePointers.size === 0) {
       dragging = false;
       container.classList.remove('dragging');
-    } else if (activePointers.size === 1 && !gyroEnabled) {
+    } else if (activePointers.size === 1) {
       const [ptr] = activePointers.values();
       lastX = ptr.x; lastY = ptr.y;
       dragging = true;
@@ -460,6 +460,8 @@
   const _euler  = new THREE.Euler();
   const _q0     = new THREE.Quaternion();
   const _q1     = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)); // -90° X
+  const _qDrag  = new THREE.Quaternion();
+  const _eDrag  = new THREE.Euler();
 
   let lastDeviceOrientation = null;
 
@@ -487,11 +489,17 @@
     camera.quaternion.multiply(
       _q0.setFromAxisAngle(_zee, -THREE.MathUtils.degToRad(screenAngle))
     );
+
+    // Apply drag offset on top of gyro so touch-pan still works
+    _eDrag.set(pitch, yaw, 0, 'YXZ');
+    _qDrag.setFromEuler(_eDrag);
+    camera.quaternion.premultiply(_qDrag);
   }
 
   function enableGyro() {
     window.addEventListener('deviceorientation', onDeviceOrientation, true);
     gyroEnabled = true;
+    yaw = 0; pitch = 0;   // reset drag offset when enabling gyro
     gyroBtn.classList.add('active');
     gyroBtn.title = 'Disable gyroscope';
   }
@@ -649,21 +657,27 @@
     iconMute.style.display = videoEl.muted ? ''     : 'none';
   });
 
-  // Fullscreen
+  // Fullscreen (with webkit fallback for Safari)
   function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
+    const el = document.documentElement;
+    const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    if (!isFs) {
+      const req = el.requestFullscreen || el.webkitRequestFullscreen;
+      if (req) req.call(el).catch(() => {});
     } else {
-      document.exitFullscreen();
+      const exit = document.exitFullscreen || document.webkitExitFullscreen;
+      if (exit) exit.call(document);
     }
   }
   fsBtn.addEventListener('click', toggleFullscreen);
 
-  document.addEventListener('fullscreenchange', () => {
-    const isFs = !!document.fullscreenElement;
+  function onFullscreenChange() {
+    const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
     iconFsEnter.style.display = isFs ? 'none' : '';
     iconFsExit.style.display  = isFs ? ''     : 'none';
-  });
+  }
+  document.addEventListener('fullscreenchange',       onFullscreenChange);
+  document.addEventListener('webkitfullscreenchange', onFullscreenChange);
 
   // ─── Resize ───────────────────────────────────────────────────────────────────
   function resize() {
