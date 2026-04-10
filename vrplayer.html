@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>180° SBS VR Player</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0a0a;
+    color: #e0e0e0;
+    font-family: system-ui, -apple-system, sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  #canvas-container {
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+    background: #000;
+    cursor: grab;
+  }
+  #canvas-container.dragging { cursor: grabbing; }
+  #canvas-container canvas { display: block; width: 100% !important; height: 100% !important; }
+
+  /* Landing overlay */
+  #overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a0a 100%);
+    z-index: 10;
+    gap: 16px;
+    transition: opacity 0.4s ease;
+  }
+  #overlay.hidden { opacity: 0; pointer-events: none; }
+
+  #overlay h1 {
+    font-size: clamp(1.4rem, 3vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: #fff;
+  }
+  #overlay p {
+    font-size: 0.9rem;
+    color: #888;
+    max-width: 380px;
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  .btn-primary {
+    margin-top: 8px;
+    padding: 12px 32px;
+    font-size: 1rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #6c63ff, #4a90e2);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 20px rgba(108,99,255,0.4);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(108,99,255,0.5); }
+  .btn-primary:active { transform: translateY(0); }
+
+  /* Controls bar */
+  #controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #111;
+    border-top: 1px solid #222;
+    flex-wrap: nowrap;
+    min-height: 54px;
+  }
+
+  .ctrl-btn {
+    background: #1e1e1e;
+    color: #ccc;
+    border: 1px solid #2e2e2e;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+  }
+  .ctrl-btn:hover { background: #2a2a2a; color: #fff; }
+  .ctrl-btn:active { background: #333; }
+  .ctrl-btn.active { background: #2a1f6e; color: #a89fff; border-color: #6c63ff; }
+  .ctrl-btn.active:hover { background: #3a2f8e; color: #c0b8ff; }
+  .ctrl-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+  .ctrl-btn.open-file {
+    width: auto;
+    padding: 0 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  /* Seek bar */
+  #seek-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  #time-display {
+    font-size: 0.75rem;
+    color: #888;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    min-width: 88px;
+    text-align: center;
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: #333;
+    outline: none;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  input[type=range]:hover { background: #444; }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #6c63ff;
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(108,99,255,0.6);
+    transition: transform 0.15s;
+  }
+  input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.2); }
+  input[type=range]::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #6c63ff; border: none; cursor: pointer;
+  }
+
+  #seek-bar { flex: 1; min-width: 60px; }
+
+  /* Volume */
+  #vol-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  #vol-slider { width: 70px; }
+
+  /* Divider */
+  .sep { width: 1px; height: 24px; background: #2e2e2e; flex-shrink: 0; }
+
+  /* Info badge */
+  #info-badge {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.7);
+    color: #aaa;
+    font-size: 0.72rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid #333;
+    pointer-events: none;
+    transition: opacity 0.5s;
+    white-space: nowrap;
+    z-index: 5;
+  }
+  #info-badge.hide { opacity: 0; }
+</style>
+</head>
+<body>
+
+<div id="canvas-container">
+  <div id="overlay">
+    <h1>180° SBS VR Player</h1>
+    <p>Open a Side-by-Side equirectangular 180° video file to begin. The left eye view will be rendered inside the sphere.</p>
+    <button class="btn-primary" id="overlay-open-btn">
+      Open Video File
+    </button>
+    <p style="font-size:0.75rem;color:#555;margin-top:4px;">Drag to look around &nbsp;·&nbsp; Arrow keys to pan &nbsp;·&nbsp; Scroll / pinch to zoom &nbsp;·&nbsp; Gyro button for motion control</p>
+  </div>
+  <div id="info-badge">Drag to look around · Pinch to zoom · Tap gyro for motion</div>
+</div>
+
+<div id="controls">
+  <button class="ctrl-btn open-file" id="open-btn" title="Open video file">
+    <svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V6h5.17l2 2H20v10z"/></svg>
+    Open
+  </button>
+
+  <div class="sep"></div>
+
+  <button class="ctrl-btn" id="play-btn" title="Play / Pause (Space)">
+    <!-- Play icon -->
+    <svg id="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    <!-- Pause icon -->
+    <svg id="icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+  </button>
+
+  <div id="seek-wrap">
+    <span id="time-display">0:00 / 0:00</span>
+    <input type="range" id="seek-bar" min="0" max="1000" value="0" step="1">
+  </div>
+
+  <div class="sep"></div>
+
+  <div id="vol-wrap">
+    <button class="ctrl-btn" id="mute-btn" title="Mute / Unmute">
+      <svg id="icon-vol" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+      <svg id="icon-mute" viewBox="0 0 24 24" style="display:none"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+    </button>
+    <input type="range" id="vol-slider" min="0" max="100" value="80" step="1">
+  </div>
+
+  <div class="sep"></div>
+
+  <button class="ctrl-btn" id="reset-btn" title="Reset view (R)">
+    <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+  </button>
+
+  <button class="ctrl-btn" id="gyro-btn" title="Toggle gyroscope / motion control">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93V18h-2v1.93C7.06 19.48 4.52 16.94 4.07 13H6v-2H4.07C4.52 7.06 7.06 4.52 11 4.07V6h2V4.07c3.94.45 6.48 2.99 6.93 6.93H18v2h1.93c-.45 3.94-2.99 6.48-6.93 6.93zM12 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+  </button>
+
+  <button class="ctrl-btn" id="fs-btn" title="Fullscreen (F)">
+    <svg id="icon-fs-enter" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+    <svg id="icon-fs-exit" viewBox="0 0 24 24" style="display:none"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>
+  </button>
+</div>
+
+<input type="file" id="file-input" accept="video/*" style="display:none">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ─── DOM refs ────────────────────────────────────────────────────────────────
+  const container   = document.getElementById('canvas-container');
+  const overlay     = document.getElementById('overlay');
+  const infoBadge   = document.getElementById('info-badge');
+  const fileInput   = document.getElementById('file-input');
+  const openBtn     = document.getElementById('open-btn');
+  const overlayOpen = document.getElementById('overlay-open-btn');
+  const playBtn     = document.getElementById('play-btn');
+  const iconPlay    = document.getElementById('icon-play');
+  const iconPause   = document.getElementById('icon-pause');
+  const seekBar     = document.getElementById('seek-bar');
+  const timeDisplay = document.getElementById('time-display');
+  const muteBtn     = document.getElementById('mute-btn');
+  const iconVol     = document.getElementById('icon-vol');
+  const iconMute    = document.getElementById('icon-mute');
+  const volSlider   = document.getElementById('vol-slider');
+  const resetBtn    = document.getElementById('reset-btn');
+  const fsBtn       = document.getElementById('fs-btn');
+  const iconFsEnter = document.getElementById('icon-fs-enter');
+  const iconFsExit  = document.getElementById('icon-fs-exit');
+
+  // ─── Three.js setup ──────────────────────────────────────────────────────────
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(90, 1, 0.1, 2000);
+  camera.position.set(0, 0, 0);
+
+  // Build the 180° sphere with UV mapping for left eye (u: 0→0.5)
+  // We use a SphereGeometry and then patch UVs so that:
+  //   horizontal UVs map to [0, 0.5] instead of [0, 1]   (left SBS half)
+  //   vertical   UVs remain [0, 1]
+  // The sphere is inverted (faces inward) via negative scale.
+  const SPHERE_RADIUS  = 500;
+  const SPHERE_W_SEGS  = 64;
+  const SPHERE_H_SEGS  = 32;
+
+  // phiStart=0, phiLength=PI covers the front hemisphere (180°)
+  const geo = new THREE.SphereGeometry(
+    SPHERE_RADIUS,
+    SPHERE_W_SEGS,
+    SPHERE_H_SEGS,
+    Math.PI / 2,   // phiStart  – start at left edge of front hemisphere
+    Math.PI,       // phiLength – 180° arc
+    0,
+    Math.PI        // full vertical arc
+  );
+
+  // Patch UVs: compress horizontal UV to [0, 0.5]
+  const uvAttr = geo.attributes.uv;
+  for (let i = 0; i < uvAttr.count; i++) {
+    uvAttr.setX(i, uvAttr.getX(i) * 0.5);
+  }
+  uvAttr.needsUpdate = true;
+
+  const videoMat = new THREE.MeshBasicMaterial({
+    side: THREE.BackSide,   // render inside of sphere
+    color: 0xffffff,
+  });
+
+  const sphere = new THREE.Mesh(geo, videoMat);
+  scene.add(sphere);
+
+  // ─── Camera euler state ───────────────────────────────────────────────────────
+  // yaw   = rotation around Y axis (left/right look)
+  // pitch = rotation around X axis (up/down look)
+  let yaw   = 0;   // radians
+  let pitch = 0;
+  const MAX_PITCH = Math.PI / 2 - 0.05;
+  const KEY_SPEED = 0.03;        // radians per frame for arrow keys
+
+  function applyRotation() {
+    pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, pitch));
+    camera.rotation.order = 'YXZ';
+    camera.rotation.y = yaw;
+    camera.rotation.x = pitch;
+  }
+
+  // ─── Gyroscope state (declared early; used by pointer drag check) ────────────
+  let gyroEnabled = false;
+
+  // ─── Pointer drag + pinch-to-zoom ────────────────────────────────────────────
+  let dragging       = false;
+  let lastX          = 0;
+  let lastY          = 0;
+  const DRAG_SENS    = 0.003;
+  const activePointers = new Map();
+  let lastPinchDist  = null;
+
+  container.addEventListener('pointerdown', e => {
+    container.setPointerCapture(e.pointerId);
+    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (activePointers.size === 1 && !gyroEnabled) {
+      dragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      container.classList.add('dragging');
+      hideBadge();
+    } else if (activePointers.size === 2) {
+      dragging = false;
+      container.classList.remove('dragging');
+      const pts = [...activePointers.values()];
+      lastPinchDist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+    }
+  });
+
+  container.addEventListener('pointermove', e => {
+    if (!activePointers.has(e.pointerId)) return;
+    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (activePointers.size === 2 && lastPinchDist !== null) {
+      const pts = [...activePointers.values()];
+      const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+      camera.fov = Math.max(30, Math.min(110, camera.fov + (lastPinchDist - dist) * 0.08));
+      camera.updateProjectionMatrix();
+      lastPinchDist = dist;
+      return;
+    }
+
+    if (!dragging || gyroEnabled) return;
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    yaw   -= dx * DRAG_SENS;
+    pitch -= dy * DRAG_SENS;
+    applyRotation();
+  });
+
+  container.addEventListener('pointerup', e => {
+    activePointers.delete(e.pointerId);
+    if (activePointers.size < 2) lastPinchDist = null;
+    if (activePointers.size === 0) {
+      dragging = false;
+      container.classList.remove('dragging');
+    } else if (activePointers.size === 1 && !gyroEnabled) {
+      const [ptr] = activePointers.values();
+      lastX = ptr.x; lastY = ptr.y;
+      dragging = true;
+    }
+  });
+
+  container.addEventListener('pointercancel', e => {
+    activePointers.delete(e.pointerId);
+    if (activePointers.size === 0) {
+      dragging = false;
+      container.classList.remove('dragging');
+      lastPinchDist = null;
+    }
+  });
+
+  // Scroll to zoom
+  container.addEventListener('wheel', e => {
+    e.preventDefault();
+    camera.fov = Math.max(30, Math.min(110, camera.fov + e.deltaY * 0.05));
+    camera.updateProjectionMatrix();
+  }, { passive: false });
+
+  // ─── Keyboard ─────────────────────────────────────────────────────────────────
+  const keysDown = new Set();
+  document.addEventListener('keydown', e => {
+    keysDown.add(e.key);
+    // Play/pause
+    if (e.key === ' ' && videoEl) { e.preventDefault(); togglePlay(); }
+    // Fullscreen
+    if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+    // Reset
+    if (e.key === 'r' || e.key === 'R') resetView();
+  });
+  document.addEventListener('keyup', e => keysDown.delete(e.key));
+
+  function processKeys() {
+    if (keysDown.has('ArrowLeft'))  { yaw   += KEY_SPEED; hideBadge(); }
+    if (keysDown.has('ArrowRight')) { yaw   -= KEY_SPEED; hideBadge(); }
+    if (keysDown.has('ArrowUp'))    { pitch += KEY_SPEED; hideBadge(); }
+    if (keysDown.has('ArrowDown'))  { pitch -= KEY_SPEED; hideBadge(); }
+    if (keysDown.size) applyRotation();
+  }
+
+  // ─── Reset view ───────────────────────────────────────────────────────────────
+  function resetView() {
+    yaw   = 0;
+    pitch = 0;
+    camera.fov = 90;
+    camera.updateProjectionMatrix();
+    applyRotation();
+  }
+  resetBtn.addEventListener('click', resetView);
+
+  // ─── Gyroscope ───────────────────────────────────────────────────────────────
+  const gyroBtn = document.getElementById('gyro-btn');
+
+  // Quaternion helpers for device-orientation → camera (standard Three.js approach)
+  const _zee    = new THREE.Vector3(0, 0, 1);
+  const _euler  = new THREE.Euler();
+  const _q0     = new THREE.Quaternion();
+  const _q1     = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)); // -90° X
+
+  let lastDeviceOrientation = null;
+
+  function onDeviceOrientation(e) {
+    if (!gyroEnabled) return;
+    lastDeviceOrientation = { alpha: e.alpha, beta: e.beta, gamma: e.gamma };
+  }
+
+  function updateGyroCamera() {
+    if (!gyroEnabled || !lastDeviceOrientation) return;
+    const { alpha, beta, gamma } = lastDeviceOrientation;
+    if (alpha === null || beta === null || gamma === null) return;
+
+    _euler.set(
+      THREE.MathUtils.degToRad(beta),
+      THREE.MathUtils.degToRad(alpha),
+      -THREE.MathUtils.degToRad(gamma),
+      'YXZ'
+    );
+    camera.quaternion.setFromEuler(_euler);
+    camera.quaternion.multiply(_q1);
+
+    // Compensate for screen orientation (landscape vs portrait)
+    const screenAngle = (window.screen.orientation?.angle) || 0;
+    camera.quaternion.multiply(
+      _q0.setFromAxisAngle(_zee, -THREE.MathUtils.degToRad(screenAngle))
+    );
+  }
+
+  function enableGyro() {
+    window.addEventListener('deviceorientation', onDeviceOrientation, true);
+    gyroEnabled = true;
+    gyroBtn.classList.add('active');
+    gyroBtn.title = 'Disable gyroscope';
+  }
+
+  function disableGyro() {
+    window.removeEventListener('deviceorientation', onDeviceOrientation, true);
+    gyroEnabled = false;
+    lastDeviceOrientation = null;
+    gyroBtn.classList.remove('active');
+    gyroBtn.title = 'Enable gyroscope / motion control';
+    // Restore euler rotation so camera doesn't jump
+    applyRotation();
+  }
+
+  gyroBtn.addEventListener('click', () => {
+    if (gyroEnabled) {
+      disableGyro();
+      return;
+    }
+    // iOS 13+ requires permission prompt on user gesture
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission()
+        .then(state => {
+          if (state === 'granted') enableGyro();
+          else alert('Motion access denied. Allow it in Settings → Safari → Motion & Orientation.');
+        })
+        .catch(() => alert('Could not request motion permission.'));
+    } else if (typeof DeviceOrientationEvent !== 'undefined') {
+      enableGyro();
+    } else {
+      alert('Gyroscope not supported on this device/browser.');
+    }
+  });
+
+  // ─── Info badge auto-hide ────────────────────────────────────────────────────
+  let badgeTimer = null;
+  function hideBadge() {
+    infoBadge.classList.add('hide');
+    if (badgeTimer) clearTimeout(badgeTimer);
+  }
+  // Show briefly on load
+  badgeTimer = setTimeout(hideBadge, 3500);
+
+  // ─── Video element ────────────────────────────────────────────────────────────
+  let videoEl      = null;
+  let videoTex     = null;
+  let seekDragging = false;
+  let objectURL    = null;
+
+  function loadVideo(file) {
+    if (objectURL) URL.revokeObjectURL(objectURL);
+    if (videoTex)  { videoTex.dispose(); videoTex = null; }
+    if (videoEl)   { videoEl.pause(); videoEl.src = ''; }
+
+    objectURL = URL.createObjectURL(file);
+    videoEl   = document.createElement('video');
+    videoEl.src          = objectURL;
+    videoEl.crossOrigin  = 'anonymous';
+    videoEl.loop         = false;
+    videoEl.playsInline  = true;
+    videoEl.volume       = volSlider.value / 100;
+    videoEl.muted        = false;
+
+    videoEl.addEventListener('loadedmetadata', () => {
+      seekBar.max = Math.floor(videoEl.duration * 10);
+    });
+
+    videoEl.addEventListener('play',  updatePlayIcon);
+    videoEl.addEventListener('pause', updatePlayIcon);
+    videoEl.addEventListener('ended', updatePlayIcon);
+
+    videoTex = new THREE.VideoTexture(videoEl);
+    videoTex.minFilter = THREE.LinearFilter;
+    videoTex.magFilter = THREE.LinearFilter;
+    videoTex.format    = THREE.RGBFormat;
+
+    videoMat.map     = videoTex;
+    videoMat.needsUpdate = true;
+
+    // Hide overlay, show badge again briefly
+    overlay.classList.add('hidden');
+    infoBadge.classList.remove('hide');
+    if (badgeTimer) clearTimeout(badgeTimer);
+    badgeTimer = setTimeout(hideBadge, 3500);
+
+    videoEl.play().catch(() => {});
+  }
+
+  // ─── File picker ─────────────────────────────────────────────────────────────
+  function openFilePicker() { fileInput.click(); }
+  openBtn.addEventListener('click',     openFilePicker);
+  overlayOpen.addEventListener('click', openFilePicker);
+
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) loadVideo(file);
+    fileInput.value = '';
+  });
+
+  // ─── Playback controls ───────────────────────────────────────────────────────
+  function togglePlay() {
+    if (!videoEl) return;
+    if (videoEl.paused || videoEl.ended) {
+      videoEl.play();
+    } else {
+      videoEl.pause();
+    }
+  }
+
+  function updatePlayIcon() {
+    if (!videoEl || videoEl.paused || videoEl.ended) {
+      iconPlay.style.display  = '';
+      iconPause.style.display = 'none';
+    } else {
+      iconPlay.style.display  = 'none';
+      iconPause.style.display = '';
+    }
+  }
+
+  playBtn.addEventListener('click', togglePlay);
+
+  // Seek
+  seekBar.addEventListener('mousedown',  () => { seekDragging = true; });
+  seekBar.addEventListener('touchstart', () => { seekDragging = true; }, { passive: true });
+  seekBar.addEventListener('input', () => {
+    if (!videoEl) return;
+    videoEl.currentTime = (seekBar.value / seekBar.max) * videoEl.duration;
+  });
+  seekBar.addEventListener('mouseup',  () => { seekDragging = false; });
+  seekBar.addEventListener('touchend', () => { seekDragging = false; });
+
+  function formatTime(s) {
+    if (!isFinite(s)) return '0:00';
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60).toString().padStart(2, '0');
+    return `${m}:${sec}`;
+  }
+
+  // Volume
+  volSlider.addEventListener('input', () => {
+    if (!videoEl) return;
+    videoEl.volume = volSlider.value / 100;
+    if (videoEl.muted && videoEl.volume > 0) {
+      videoEl.muted = false;
+      iconVol.style.display  = '';
+      iconMute.style.display = 'none';
+    }
+  });
+
+  muteBtn.addEventListener('click', () => {
+    if (!videoEl) return;
+    videoEl.muted = !videoEl.muted;
+    iconVol.style.display  = videoEl.muted ? 'none' : '';
+    iconMute.style.display = videoEl.muted ? ''     : 'none';
+  });
+
+  // Fullscreen
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen();
+    }
+  }
+  fsBtn.addEventListener('click', toggleFullscreen);
+
+  document.addEventListener('fullscreenchange', () => {
+    const isFs = !!document.fullscreenElement;
+    iconFsEnter.style.display = isFs ? 'none' : '';
+    iconFsExit.style.display  = isFs ? ''     : 'none';
+  });
+
+  // ─── Resize ───────────────────────────────────────────────────────────────────
+  function resize() {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // ─── Render loop ─────────────────────────────────────────────────────────────
+  function animate() {
+    requestAnimationFrame(animate);
+
+    processKeys();
+    updateGyroCamera();
+
+    // Update seek bar and time display
+    if (videoEl && !seekDragging && isFinite(videoEl.duration) && videoEl.duration > 0) {
+      seekBar.value = (videoEl.currentTime / videoEl.duration) * seekBar.max;
+      timeDisplay.textContent =
+        `${formatTime(videoEl.currentTime)} / ${formatTime(videoEl.duration)}`;
+    }
+
+    if (videoTex && videoEl && !videoEl.paused && !videoEl.ended) {
+      videoTex.needsUpdate = true;
+    }
+
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>
