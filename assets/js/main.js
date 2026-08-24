@@ -1,156 +1,173 @@
-// JavaScript to handle section visibility
-document.addEventListener('DOMContentLoaded', function() {
-    // Get all navigation links
-    const navLinks = document.querySelectorAll('.main-header nav a');
-    
-    // Get all sections
-    const sections = document.querySelectorAll('section');
-    
-    // Get the header title element
-    const headerTitle = document.querySelector('.main-header h2');
-    
-    // Add click event listener to each navigation link
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Remove active class from all links
-            navLinks.forEach(l => l.classList.remove('active'));
-            
-            // Add active class to clicked link
-            this.classList.add('active');
-            
-            // Get the target section id
-            const targetId = this.getAttribute('href').substring(1);
-            
-            // Update header title with fade effect
-            headerTitle.style.opacity = '0';
-            
-            setTimeout(() => {
-                // Update header title based on selected section
-                switch(targetId) {
-                    case 'about':
-                        headerTitle.textContent = 'About';
-                        break;
-                    case 'resume':
-                        headerTitle.textContent = 'Resume';
-                        break;
-                    case 'projects':
-                        headerTitle.textContent = 'Projects';
-                        break;
-                    default:
-                        headerTitle.textContent = 'About';
-                }
-                
-                // Fade in the new title
-                headerTitle.style.opacity = '1';
-            }, 300); // Match this delay with the CSS transition time
-            
-            // Hide all sections
-            sections.forEach(section => {
-                section.style.display = 'none';
-            });
-            
-            // Show the target section
-            document.getElementById(targetId).style.display = 'block';
+document.addEventListener('DOMContentLoaded', () => {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Footer year
+    const yearEl = document.getElementById('year');
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+    // Mobile nav toggle
+    const navToggle = document.getElementById('navToggle');
+    const navLinks = document.getElementById('navLinks');
+    if (navToggle && navLinks) {
+        navToggle.addEventListener('click', () => {
+            const open = navLinks.classList.toggle('open');
+            navToggle.classList.toggle('open', open);
+            navToggle.setAttribute('aria-expanded', String(open));
         });
-    });
-    
-    // Show the About section by default
-    sections.forEach(section => {
-        if (section.id !== 'about') {
-            section.style.display = 'none';
-        }
-    });
-    document.getElementById('about').style.display = 'block';
-    
-    // Slideshow functionality
-    function initSlideshows() {
-        const slideshows = document.querySelectorAll('.slideshow');
-        const modal = document.getElementById('slideshowModal');
-        const modalImg = document.getElementById('slideshowModalImg');
-        const modalClose = document.getElementById('slideshowModalClose');
+        navLinks.querySelectorAll('a').forEach((link) => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('open');
+                navToggle.classList.remove('open');
+                navToggle.setAttribute('aria-expanded', 'false');
+            });
+        });
+    }
 
-        slideshows.forEach(slideshow => {
-            const slides = slideshow.querySelectorAll('.slideshow-slide');
-            const dots = slideshow.querySelectorAll('.slideshow-dot');
-            const projectId = slideshow.getAttribute('data-project');
-            let currentSlide = 0;
-            let slideInterval;
+    // Sticky nav background + back-to-top visibility
+    const nav = document.getElementById('siteNav');
+    const toTop = document.getElementById('toTop');
+    const onScroll = () => {
+        const y = window.scrollY;
+        if (nav) nav.classList.toggle('scrolled', y > 8);
+        if (toTop) toTop.classList.toggle('visible', y > 700);
+    };
+    document.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
 
-            // Function to change slide
-            function goToSlide(n) {
-                slides.forEach(slide => slide.classList.remove('active'));
-                dots.forEach(dot => dot.classList.remove('active'));
-                slides[n].classList.add('active');
-                dots[n].classList.add('active');
-                currentSlide = n;
-            }
+    if (toTop) {
+        toTop.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+        });
+    }
 
-            function nextSlide() {
-                const next = (currentSlide + 1) % slides.length;
-                goToSlide(next);
-            }
-
-            function startSlideShow() {
-                slideInterval = setInterval(nextSlide, 2000);
-            }
-
-            // Do not pause slideshow on hover anymore
-            // slideshow.addEventListener('mouseenter', () => {
-            //     clearInterval(slideInterval);
-            // });
-            // slideshow.addEventListener('mouseleave', () => {
-            //     startSlideShow();
-            // });
-
-            dots.forEach((dot, index) => {
-                dot.addEventListener('click', () => {
-                    goToSlide(index);
+    // Scroll-spy for nav links
+    const sections = document.querySelectorAll('main section[id]');
+    const spyLinks = document.querySelectorAll('.nav-links a');
+    if (sections.length && spyLinks.length && 'IntersectionObserver' in window) {
+        const spyObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                spyLinks.forEach((link) => {
+                    link.classList.toggle('active', link.getAttribute('href') === `#${entry.target.id}`);
                 });
             });
+        }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+        sections.forEach((section) => spyObserver.observe(section));
+    }
 
+    // Scroll-reveal
+    const revealEls = document.querySelectorAll('.reveal');
+    if ('IntersectionObserver' in window) {
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('in-view');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.12 });
+        revealEls.forEach((el) => revealObserver.observe(el));
+    } else {
+        revealEls.forEach((el) => el.classList.add('in-view'));
+    }
 
-            // Add click event to slides for modal popup (slideshow keeps running)
-            slides.forEach((slide) => {
-                slide.style.cursor = 'pointer';
-                slide.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Prevent bubbling
-                    const imgSrc = slide.getAttribute('data-img');
-                    if (imgSrc) {
-                        modalImg.src = imgSrc;
-                        modal.classList.add('active');
+    // Hero typewriter
+    const heroRole = document.getElementById('heroRole');
+    if (heroRole) {
+        const phrases = [
+            'Building cloud-native platforms on AWS & GCP',
+            'Scaling Kubernetes clusters at HCL Software',
+            'Shipping infrastructure from POC to GA',
+            'Building agentic workflows with Claude Code'
+        ];
+        if (reduceMotion) {
+            heroRole.textContent = phrases[0];
+        } else {
+            let phraseIndex = 0;
+            let charIndex = phrases[0].length;
+            let deleting = false;
+            heroRole.textContent = phrases[0];
+
+            const tick = () => {
+                const current = phrases[phraseIndex];
+                if (!deleting) {
+                    charIndex++;
+                    if (charIndex > current.length) {
+                        deleting = true;
+                        setTimeout(tick, 1800);
+                        return;
                     }
-                });
-            });
-
-            startSlideShow();
-        });
-
-        // Modal close logic (slideshow keeps running)
-        if (modal && modalClose) {
-            modalClose.addEventListener('click', () => {
-                modal.classList.remove('active');
-                modalImg.src = '';
-            });
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.classList.remove('active');
-                    modalImg.src = '';
+                } else {
+                    charIndex--;
+                    if (charIndex < 0) {
+                        deleting = false;
+                        phraseIndex = (phraseIndex + 1) % phrases.length;
+                        charIndex = 0;
+                    }
                 }
-            });
+                heroRole.textContent = phrases[phraseIndex].slice(0, charIndex);
+                setTimeout(tick, deleting ? 30 : 55);
+            };
+            setTimeout(tick, 1800);
         }
     }
-    
-    // Initialize slideshows when the projects section is visible
-    const projectsLink = document.querySelector('a[href="#projects"]');
-    projectsLink.addEventListener('click', () => {
-        // Use setTimeout to ensure the projects section is visible before initializing slideshows
-        setTimeout(initSlideshows, 100);
-    });
-    
-    // If projects section is visible by default, initialize slideshows
-    if (document.getElementById('projects').style.display === 'block') {
-        initSlideshows();
+
+    // Project slideshows
+    const modal = document.getElementById('imgModal');
+    const modalImg = document.getElementById('modalImg');
+    const modalClose = document.getElementById('modalClose');
+
+    const openModal = (src, alt) => {
+        if (!modal || !modalImg) return;
+        modalImg.src = src;
+        modalImg.alt = alt || 'Enlarged project image';
+        modal.classList.add('active');
+    };
+    const closeModal = () => {
+        if (!modal || !modalImg) return;
+        modal.classList.remove('active');
+        modalImg.src = '';
+    };
+    if (modalClose) modalClose.addEventListener('click', closeModal);
+    if (modal) {
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
     }
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeModal();
+    });
+
+    document.querySelectorAll('.slideshow').forEach((slideshow) => {
+        const slides = Array.from(slideshow.querySelectorAll('.slide'));
+        const dotsWrap = slideshow.querySelector('.slide-dots');
+        const zoomBtn = slideshow.querySelector('.slide-zoom');
+        let index = Math.max(0, slides.findIndex((s) => s.classList.contains('active')));
+        let timer = null;
+
+        const goTo = (n) => {
+            slides[index].classList.remove('active');
+            if (dotsWrap) dotsWrap.children[index]?.classList.remove('active');
+            index = n;
+            slides[index].classList.add('active');
+            if (dotsWrap) dotsWrap.children[index]?.classList.add('active');
+        };
+
+        if (slides.length > 1 && dotsWrap) {
+            slides.forEach((_, i) => {
+                const dot = document.createElement('button');
+                dot.className = 'slide-dot' + (i === index ? ' active' : '');
+                dot.type = 'button';
+                dot.setAttribute('aria-label', `Show image ${i + 1} of ${slides.length}`);
+                dot.addEventListener('click', () => goTo(i));
+                dotsWrap.appendChild(dot);
+            });
+
+            if (!reduceMotion) {
+                timer = setInterval(() => goTo((index + 1) % slides.length), 3200);
+            }
+        }
+
+        if (zoomBtn) {
+            zoomBtn.addEventListener('click', () => openModal(slides[index].src, slides[index].alt));
+        }
+    });
 });
